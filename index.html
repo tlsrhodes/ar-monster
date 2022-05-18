@@ -140,6 +140,7 @@
                 
                 monsterEntity.setAttribute('scale', '60 60 60');
                 monsterEntity.setAttribute('animation', 'enabled', 'false');
+                monsterEntity.querySelector('[sound]').components.sound.playSound();
                 alert(monster.capturedDialogue);
                 document.querySelector("#footer").innerHTML = monster.capturedDialogue;
                 monster.setCaptured(true);
@@ -163,6 +164,8 @@
             if(capturedCount == 3){
               isGameOver = true; //set game over
               alert('Congratulations, you captured all '+capturedCount+' monsters and SAVED your library!!!');
+              var winEl = document.querySelector("#winSoundEntity");
+              winEl.components.sound.playSound();
             }
           }else{ //isGameOver == true
             alert('GAME OVER! Thanks for participating - Canada Bay Libraries');
@@ -182,9 +185,17 @@
             device-orientation-permission-ui="enabled: false"
             accepts-clicks>
       <a-assets>
+        <a-asset-item id="soundChuckie" src="./sounds/chuckie.ogg" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="soundCrabie" src="./sounds/crabie.ogg" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="soundYeti" src="./sounds/yeti.ogg" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="soundWin" src="./sounds/win.wav" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="soundUnlock" src="./sounds/unlock.wav" response-type="arraybuffer"></a-asset-item>
       </a-assets>
       
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      
+      <!--Audio Win-->
+      <a-entity id="winSoundEntity" sound="src:#soundWin"></a-entity>
       
       <a-entity id="Chuckie-target" mindar-image-target="targetIndex:0">
         <a-entity id="Chuckie-model"
@@ -195,7 +206,8 @@
                 animation-mixer="loop:repeat"
                 animation="property:scale; dir:alternate; dur:1000; delay:100;
                                   easing:easeInSine; loop:false; from:0.25 0.25 0.25; to:0 0 0; enabled:false">
-            </a-entity>
+            <a-entity sound="src:#soundChuckie"></a-entity>       
+        </a-entity>
       </a-entity>
       
       <a-entity id="Crabie-target" mindar-image-target="targetIndex:1">
@@ -207,7 +219,8 @@
                 animation-mixer="loop:repeat"
                 animation="property:scale; dir:alternate; dur:1000; delay:100;
                                   easing:easeInSine; loop:false; from:0.25 0.25 0.25; to:0 0 0; enabled:false">
-            </a-entity>
+          <a-entity sound="src:#soundCrabie"></a-entity>
+        </a-entity>
       </a-entity>
       
       <a-entity id="Yeti-target" mindar-image-target="targetIndex:2">
@@ -219,7 +232,8 @@
                 animation-mixer="loop:repeat"
                 animation="property:scale; dir:alternate; dur:1000; delay:100;
                                   easing:easeInSine; loop:false; from:0.25 0.25 0.25; to:0 0 0; enabled:false">
-            </a-entity>
+          <a-entity sound="src:#soundYeti"></a-entity>
+        </a-entity>
       </a-entity>
       
     </a-scene>
