@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script> 
+    <style>
+      #footer{
+        position: absolute;
+        bottom:0;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: yellow;
+        font-size: 1.2em;
+      }
+      
+      #buttons {
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        width: 100%
+        height: 10em;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        background-color:rgba(0,0,0,0.8);
+        z-index: 10;
+      }
+      
+      #capture-button {
+        padding: 0.5em;
+        boarder-radius: 4px;
+        border: none;
+        background: white;
+        color: black;
+        justify-content: center;
+        width: 8em;
+        height: 4em;
+        font-size: 1em;
+      }
+    </style>
+    <script>
+      //arjs: arjs-nft-loaded
+      addEventListener('arReady',function(){
+        document.querySelector("#footer").innerHTML = 'Monster Universe connected! Now point at a portal image ...'; 
+      });
+      
+      //arjs: markerFound
+      addEventListener('targetFound',function(){
+        document.querySelector("#footer").innerHTML = 'Found Monster';  
+        let btns = document.getElementById("buttons");
+        btns.style.display = 'block';
+      });
+      
+      //arjs: markerLost
+      addEventListener('targetLost',function(){
+        document.querySelector("#footer").innerHTML = 'Lost Monster';  
+        let btns = document.getElementById("buttons");
+        btns.style.display = 'none';
+      });
+    </script>
+    <script>
+      //global monsters array
+      var monsters = [];
+      var isGameOver = false;
+      
+      class Monster{
+        constructor(name,capturedDialogue){
+          this.name = name;
+          //this.dialogue = dialogue;
+          this.capturedDialogue = capturedDialogue;
+          this.isCaptured = false; //default not catpured
+        }
+        
+        setCaptured(mode){
+          this.isCaptured = mode;
+        }
+        
+        getIsCaptured(){
+          return this.isCaptured;
+        }
+      }
+      
+      window.addEventListener('load',(event)=>{
+        var monstersArray = [
+          {
+            name: 'Mushy',
+            capturedDialogue: 'Great Job, you captured Mushy!'
+          },
+          {
+            name: 'Trotter',
+            capturedDialogue: 'Yeah, Trotter is captured!'
+          },
+          {
+            name: 'Batfink',
+            capturedDialogue: 'Hooray, Batfink is under control!'
+          }
+        ];
+        
+        monstersArray.forEach(monster => {
+          //initiate all monsters in the global array
+          monsters.push(new Monster(monster.name,monster.capturedDialogue));
+        });
+      });//end window eventlistener
+    </script>
+    <script>
+      AFRAME.registerComponent('accepts-clicks',{
+        init:function(){
+          const btns = document.getElementById("buttons");
+          
+          this.handleClickEvent = AFRAME.utils.bind(this.handleClickEvent,this);
+          
+          btns.addEventListener('touchend',this.handleClickEvent);
+          btns.addEventListener('click',this.handleClickEvent);
+        },
+        
+        handleClickEvent:function(){
+          //console.log('try capture');
+          
+          // var chuckieTarget = document.querySelector("#chuckie-target");
+          // var crabbieTarget = document.querySelector("#crabbie-target");
+          // var yetiTarget = document.querySelector("#yeti-target");
+          //Now get to know which moster.name and display dialogue accordingly
+          //Search all monsters in the global array
+          monsters.forEach(monster => {
+            var monsterTarget = document.querySelector("#"+monster.name+"-target");
+            if(monsterTarget && monsterTarget.object3D.visible == true){
+              //not captured yet
+              if(monster.getIsCaptured() == false){
+                //play the capture animation
+                var monsterEntity = document.querySelector("#"+monster.name+"-model");
+                monsterEntity.setAttribute('animation', 'enabled', 'true');
+                
+                monsterEntity.setAttribute('scale', '0.25 0.25 0.25');
+                monsterEntity.setAttribute('animation', 'enabled', 'false');
+                monsterEntity.querySelector('[sound]').components.sound.playSound();
+                alert(monster.capturedDialogue);
+                document.querySelector("#footer").innerHTML = monster.capturedDialogue;
+                monster.setCaptured(true);
+              }else{
+              //monster already captured
+              if(monster.getIsCaptured() == true)
+                alert('THANK YOU, '+monster.name+' has already been captured!');
+              }
+            }
+          }); //end check each monster
+          
+          //check and set Gameover
+          if(isGameOver == false){
+            let capturedCount = 0;
+            //check if all monsters are captured
+            monsters.forEach(monster => {
+              if(monster.getIsCaptured() == true)
+                capturedCount++;
+            });
+            
+            if(capturedCount == 3){
+              isGameOver = true; //set game over
+              alert('Congratulations, you captured all '+capturedCount+' monsters and SAVED your library!!!');
+              var winEl = document.querySelector("#winSoundEntity");
+              winEl.components.sound.playSound();
+            }
+          }else{ //isGameOver == true
+            alert('GAME OVER! Thanks for participating - Canada Bay Libraries');
+          }
+        }//end handleClickEvent
+      });
+    </script>
+  </head>
+  <body>
+    <div id="buttons">
+      <button id="capture-button">Capture!</button>
+    </div>
+    <div id="footer">Searching Monster Universe ... </div>
+  
+    <a-scene mindar-image="imageTargetSrc: ./armonsters.mind;" 
+            vr-mode-ui="enabled: false" 
+            device-orientation-permission-ui="enabled: false"
+            accepts-clicks>
+      <a-assets>
+        <a-asset-item id="soundMushy" src="./sounds/chuckie.ogg" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="soundTrotter" src="./sounds/crabie.ogg" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="soundBatfink" src="./sounds/yeti.ogg" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="soundWin" src="./sounds/win.wav" response-type="arraybuffer"></a-asset-item>
+        <a-asset-item id="soundUnlock" src="./sounds/unlock.wav" response-type="arraybuffer"></a-asset-item>
+      </a-assets>
+      
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      
+      <!--Audio Win-->
+      <a-entity id="winSoundEntity" sound="src:#soundWin"></a-entity>
+      
+      <a-entity id="Mushy-target" mindar-image-target="targetIndex:0">
+        <a-entity id="Mushy-model"
+                gltf-model="./models/mushy.glb"
+                scale="0.2 0.2 0.2"
+                rotation="0 0 0" 
+                position="0 0 0.4"
+                animation-mixer="loop:repeat"
+                animation="property:scale; dir:alternate; dur:1000; delay:100;
+                                  easing:easeInSine; loop:false; from:0.25 0.25 0.25; to:0 0 0; enabled:false">
+            <a-entity sound="src:#soundMushy"></a-entity>       
+        </a-entity>
+      </a-entity>
+      
+      <a-entity id="Trotter-target" mindar-image-target="targetIndex:1">
+        <a-entity id="Trotter-model"
+                gltf-model="./models/trotter.glb"
+                scale="0.2 0.2 0.2"
+                rotation="0 0 0" 
+                position="0 0 0.4"
+                animation-mixer="loop:repeat"
+                animation="property:scale; dir:alternate; dur:1000; delay:100;
+                                  easing:easeInSine; loop:false; from:0.25 0.25 0.25; to:0 0 0; enabled:false">
+          <a-entity sound="src:#soundTrotter"></a-entity>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity id="Batfink-target" mindar-image-target="targetIndex:2">
+        <a-entity id="Batfink-model"
+                gltf-model="./models/batfink.glb"
+                scale="0.2 0.2 0.2"
+                rotation="0 0 0" 
+                position="0 0 0.4"
+                animation-mixer="loop:repeat"
+                animation="property:scale; dir:alternate; dur:1000; delay:100;
+                                  easing:easeInSine; loop:false; from:0.25 0.25 0.25; to:0 0 0; enabled:false">
+          <a-entity sound="src:#soundBatfink"></a-entity>
+        </a-entity>
+      </a-entity>
+      
+    </a-scene>
+  </body>
+</html>
